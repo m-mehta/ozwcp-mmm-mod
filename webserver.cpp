@@ -67,6 +67,7 @@ using namespace OpenZWave;
 #define UNKNOWN "<html><head><title>Nothingness</title></head><body>There is nothing here. Sorry.</body></html>\n"
 #define DEFAULT "<script type=\"text/javascript\"> document.location.href='/';</script>"
 #define EMPTY "<html></html>"
+#define DEVICE "/dev/ttyUSB0"
 
 typedef struct _conninfo {
 		conntype_t conn_type;
@@ -1388,6 +1389,13 @@ void Webserver::Free (struct MHD_Connection *conn, void **ptr, enum MHD_RequestT
 		free(cp);
 		*ptr = NULL;
 	}
+	if (devname != NULL || usb)
+		Manager::Get()->RemoveDriver(devname ? devname : "HID Controller");
+	if (devname != NULL) {
+		free(devname);
+		devname = NULL;
+	}
+	usb = false;
 }
 
 /*
@@ -1406,6 +1414,14 @@ Webserver::Webserver (int const wport) : sortcol(COL_NODE), logbytes(0), adminst
 	if (wdata != NULL) {
 		ready = true;
 	}
+	devname = (char *)malloc(strlen((char *)cp->conn_arg2) + 1);
+	if (devname == NULL) {
+		fprintf(stderr, "Out of memory open devname\n");
+		exit(1);
+	}
+	usb = false;
+	strcpy(devname, DEVICE);
+	Manager::Get()->AddDriver(devname);
 }
 
 /*
