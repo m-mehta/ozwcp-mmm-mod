@@ -1414,14 +1414,16 @@ Webserver::Webserver (int const wport) : sortcol(COL_NODE), logbytes(0), adminst
 	if (wdata != NULL) {
 		ready = true;
 	}
-	devname = (char *)malloc(strlen((char *)cp->conn_arg2) + 1);
 	if (devname == NULL) {
-		fprintf(stderr, "Out of memory open devname\n");
-		exit(1);
+		devname = (char *)malloc(strlen(DEVICE) + 1);
+		if (devname == NULL) {
+			fprintf(stderr, "Out of memory open devname\n");
+			exit(1);
+		}
+		usb = false;
+		strcpy(devname, DEVICE);
+		Manager::Get()->AddDriver(devname);
 	}
-	usb = false;
-	strcpy(devname, DEVICE);
-	Manager::Get()->AddDriver(devname);
 }
 
 /*
