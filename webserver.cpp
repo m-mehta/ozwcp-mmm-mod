@@ -1375,7 +1375,6 @@ void Webserver::FreeEP (void *cls, struct MHD_Connection *conn,
 void Webserver::Free (struct MHD_Connection *conn, void **ptr, enum MHD_RequestTerminationCode code)
 {
 	conninfo_t *cp = (conninfo_t *)*ptr;
-	fprintf(stdout, "remove driver free\n");
 	if (cp != NULL) {
 		if (cp->conn_arg1 != NULL)
 			free(cp->conn_arg1);
@@ -1391,13 +1390,7 @@ void Webserver::Free (struct MHD_Connection *conn, void **ptr, enum MHD_RequestT
 		free(cp);
 		*ptr = NULL;
 	}
-	if (devname != NULL || usb)
-		Manager::Get()->RemoveDriver(devname ? devname : "HID Controller");
-	if (devname != NULL) {
-		free(devname);
-		devname = NULL;
-	}
-	usb = false;
+
 }
 
 /*
@@ -1440,4 +1433,14 @@ Webserver::~Webserver ()
 		wdata = NULL;
 		ready = false;
 	}
+	pthread_mutex_lock(&glock);
+	if (devname != NULL || usb) {
+		Manager::Get()->RemoveDriver(devname ? devname : "HID Controller");
+		free(devname);
+		devname = NULL;
+		homeId = 0;
+		usb = false;
+	}
+	done = true;						 // let main exit
+	pthread_mutex_unlock(&glock);
 }
