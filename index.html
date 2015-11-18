@@ -14,10 +14,36 @@
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xhttp.send("2-SWITCH BINARY-user-bool-1-0=false");
 	  }
+	  function rokuLeftBtnDown() {
+	    var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "192.168.1.116:8060/keydown/Left", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send();
+	  }
+	  function rokuUpBtnDown() {
+	    var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "192.168.1.116:8060/keydown/Up", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send();
+	  }
+	  function rokuLeftBtnUp() {
+	    var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "192.168.1.116:8060/keyup/Left", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send();
+	  }
+	  function rokuUpBtnUp() {
+	    var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "192.168.1.116:8060/keyup/Up", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send();
+	  }
+
 	 </script>
   <body>
-    Test
     <button type="button" onclick="lightOn()">On</button>
     <button type="button" onclick="lightOff()">Off</button>	
+    <button type="button" onmousedown="rokuUpBtnDown()" onmouseup="rokuUpBtnUp()">Up</button>
+    <button type="button" onmousedown="rokuLeftBtnDown()" onmouseup="rokuLeftBtnUp()">Left</button>	
   </body>
 </html>
