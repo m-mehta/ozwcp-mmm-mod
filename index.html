@@ -1,8 +1,23 @@
 <html>
   <head>
     <title>Remote Control</title>
-  </head>
+    <script>
+	  function lightOn() {
+	    var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "valuepost.html", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send("2-SWITCH BINARY-user-bool-1-0=true");
+	  }
+	  function lightOff() {
+	    var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "valuepost.html", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send("2-SWITCH BINARY-user-bool-1-0=false");
+	  }
+	 </script>
   <body>
-  Test
+    Test
+    <button type="button" onclick="lightOn()">On</button>
+    <button type="button" onclick="lightOff()">Off</button>	
   </body>
 </html>
