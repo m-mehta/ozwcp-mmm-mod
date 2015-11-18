@@ -1014,6 +1014,8 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 	if (strcmp(method, MHD_HTTP_METHOD_GET) == 0) {
 		if (strcmp(url, "/") == 0 ||
 				strcmp(url, "/index.html") == 0)
+			ret = web_send_file(conn, "index.html", MHD_HTTP_OK, false);
+		else if (strcmp(url, "/cp.html") == 0)
 			ret = web_send_file(conn, "cp.html", MHD_HTTP_OK, false);
 		else if (strcmp(url, "/scenes.html") == 0)
 			ret = web_send_file(conn, "scenes.html", MHD_HTTP_OK, false);
