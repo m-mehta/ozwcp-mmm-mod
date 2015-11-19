@@ -42,6 +42,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <curl/curl.h>
+#include <lirc/lirc_client.h>
 
 #include "Manager.h"
 #include "Driver.h"
@@ -99,6 +100,36 @@ extern uint8 SUCnodeId;
 extern char *cmode;
 extern bool noop;
 extern int debug;
+
+
+void lirc_send(char *directive, char *remote, char *code)
+{
+        const char* lircd = LIRCD;
+        int fd;
+        int r;
+        lirc_cmd_ctx ctx;
+        const char *prog = "webserver";
+        
+		fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
+        if (fd < 0) {
+                fprintf(stderr, "%s: could not open socket: %s\n",
+                        prog, strerror(-fd));
+        }
+        r = lirc_command_init(&ctx, "%s %s %s\n", directive, remote, code);
+		if (r != 0)
+				fprintf(stderr, "%s: input too long\n", prog);
+		lirc_command_reply_to_stdout(&ctx);
+		do {
+                r = lirc_command_run(ctx, fd);
+                if (r != 0 && r != EAGAIN)
+                        fprintf(stderr,
+                                "Error running command: %s\n", strerror(r));
+        } while (r == EAGAIN);
+		r = (r==0) ? 0 : -1;
+		if (r == -1)
+				fprintf(stderr, "%s: %s failed.\n", prog, directive);
+        close(fd);
+}
 
 /*
  * web_send_data
@@ -1123,7 +1154,8 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 			if (*up_data_size != 0) {
 				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
 				*up_data_size = 0;
-				MyValue *val = MyNode::lookup(string((char *)cp->conn_arg1));
+				lirc_send("SEND_ONCE", "Samsung", "KEY_MUTE");
+				/*MyValue *val = MyNode::lookup(string((char *)cp->conn_arg1));
 				if (val != NULL) {
 					string arg = (char *)cp->conn_arg2;
 					if (!Manager::Get()->SetValue(val->getId(), arg))
@@ -1131,7 +1163,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				} else {
 					fprintf(stderr, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
 				}
-				return MHD_YES;
+				*/return MHD_YES;
 			} else
 				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
 		} else if (strcmp(url, "/rokuPost.html") == 0) {
