@@ -33,6 +33,7 @@
 // permission.  Title to copyright in this software and any associated
 // documentation will at all times remain with copyright holders.
 //-----------------------------------------------------------------------------
+#include <curl/curl.h>
 
 typedef enum { COL_NODE, COL_TYPE, COL_NAME, COL_LOCATION } coltype_t;
 typedef enum { CON_UNK, CON_GET, CON_POST } conntype_t;
@@ -73,6 +74,9 @@ class Webserver {
 		string adminmsg;
 		string adminfun;
 		void *wdata;
+		CURL *curl;
+		CURLcode res;
 };
-
+void server_global_init();
+void server_global_cleanup();
 void web_controller_update (Driver::ControllerState cs, Driver::ControllerError err, void *ct);

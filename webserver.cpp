@@ -41,6 +41,7 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <curl/curl.h>
 
 #include "Manager.h"
 #include "Driver.h"
@@ -84,6 +85,8 @@ bool Webserver::usb = false;
 char *Webserver::devname = NULL;
 unsigned short Webserver::port = 0;
 bool Webserver::ready = false;
+CURL *Webserver::curl = NULL;
+CURLcode Webserver::res = NULL;
 
 extern pthread_mutex_t nlock;
 extern MyNode *nodes[];
@@ -803,6 +806,24 @@ int Webserver::SendPollResponse (struct MHD_Connection *conn)
 }
 
 /*
+ * server_global_init
+ * Make required calls for curl global setup
+ */
+void server_global_init()
+{
+  curl_global_init(CURL_GLOBAL_ALL);
+}
+
+/*
+ * server_global_cleanup
+ * Make required calls for curl global cleanup
+ */
+void server_global_cleanup()
+{
+  curl_gloabl_cleanup();
+}
+
+/*
  * web_controller_update
  * Handle controller function feedback from library.
  */
@@ -1096,6 +1117,44 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 					fprintf(stderr, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
 				}
 				return MHD_YES;
+			} else
+				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
+		} else if (strcmp(url, "/IRPost.html") == 0) {
+			if (*up_data_size != 0) {
+				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
+				*up_data_size = 0;
+				MyValue *val = MyNode::lookup(string((char *)cp->conn_arg1));
+				if (val != NULL) {
+					string arg = (char *)cp->conn_arg2;
+					if (!Manager::Get()->SetValue(val->getId(), arg))
+						fprintf(stderr, "SetValue string failed type=%s\n", valueTypeStr(val->getId().GetType()));
+				} else {
+					fprintf(stderr, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
+				}
+				return MHD_YES;
+			} else
+				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
+		} else if (strcmp(url, "/rokuPost.html") == 0) {
+			if (*up_data_size != 0) {
+				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
+				*up_data_size = 0;
+				curl = curl_easy_init();
+				if (curl) {
+					curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.1.116:8060/keypress/right");
+					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
+					res = curl_easy_perform(curl);
+					if (res != CURLE_OK) fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
+					curl_easy_cleanup(curl);
+				}
+/*				MyValue *val = MyNode::lookup(string((char *)cp->conn_arg1));
+				if (val != NULL) {
+					string arg = (char *)cp->conn_arg2;
+					if (!Manager::Get()->SetValue(val->getId(), arg))
+						fprintf(stderr, "SetValue string failed type=%s\n", valueTypeStr(val->getId().GetType()));
+				} else {
+					fprintf(stderr, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
+				}
+*/				return MHD_YES;
 			} else
 				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
 		} else if (strcmp(url, "/buttonpost.html") == 0) {

@@ -791,7 +791,7 @@ int32 main(int32 argc, char* argv[])
 
 	for (i = 0; i < MAX_NODES; i++)
 		nodes[i] = NULL;
-
+	server_global_init(); //required to make this call to setup curl before threading 
 	Options::Create("./config/", "", "--SaveConfiguration=true --DumpTriggerLevel=0");
 	Options::Get()->Lock();
 
@@ -813,5 +813,6 @@ int32 main(int32 argc, char* argv[])
 	Manager::Get()->RemoveWatcher(OnNotification, NULL);
 	Manager::Destroy();
 	Options::Destroy();
+	server_global_cleanup(); //make this cleanup call last before exiting
 	exit(0);
 }

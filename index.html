@@ -16,30 +16,35 @@
 	  }
 	  function rokuLeftBtnDown() {
 	    var xhttp = new XMLHttpRequest();
-		xhttp.open("POST", "192.168.1.116:8060/keydown/Left", true)
+		xhttp.open("POST", "rokuPost.html", true)
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send();
+		xhttp.send("Left=down");
 	  }
 	  function rokuUpBtnDown() {
 	    var xhttp = new XMLHttpRequest();
-		xhttp.open("POST", "192.168.1.116:8060/keydown/Up", true)
+		xhttp.open("POST", "rokuPost.html", true)
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send();
+		xhttp.send("Up=down");
 	  }
 	  function rokuLeftBtnUp() {
 	    var xhttp = new XMLHttpRequest();
-		xhttp.open("POST", "192.168.1.116:8060/keyup/Left", true)
+		xhttp.open("POST", "rokuPost.html", true)
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send();
+		xhttp.send("Left=up");
 	  }
 	  function rokuUpBtnUp() {
 	    var xhttp = new XMLHttpRequest();
-		xhttp.open("POST", "192.168.1.116:8060/keyup/Up", true)
+		xhttp.open("POST", "rokuPost.html", true)
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send();
+		xhttp.send("Up=up");
 	  }
-
-	 </script>
+	  function irSendMute() {
+		var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "IRPost.html", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send("Mute=click");
+	  }
+	</script>
   <body>
     <button type="button" onclick="lightOn()">On</button>
     <button type="button" onclick="lightOff()">Off</button>	
