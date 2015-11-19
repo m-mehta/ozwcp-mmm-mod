@@ -74,8 +74,8 @@ class Webserver {
 		string adminmsg;
 		string adminfun;
 		void *wdata;
-		CURL *curl;
-		CURLcode res;
+		static CURL *curl;
+		static CURLcode res;
 };
 void server_global_init();
 void server_global_cleanup();

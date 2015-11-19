@@ -86,7 +86,7 @@ char *Webserver::devname = NULL;
 unsigned short Webserver::port = 0;
 bool Webserver::ready = false;
 CURL *Webserver::curl = NULL;
-CURLcode Webserver::res = NULL;
+CURLcode Webserver::res = CURLE_OK;
 
 extern pthread_mutex_t nlock;
 extern MyNode *nodes[];
@@ -820,7 +820,7 @@ void server_global_init()
  */
 void server_global_cleanup()
 {
-  curl_gloabl_cleanup();
+  curl_global_cleanup();
 }
 
 /*
