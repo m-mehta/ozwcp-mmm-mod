@@ -102,7 +102,7 @@ extern bool noop;
 extern int debug;
 
 
-void lirc_send(char *directive, char *remote, char *code)
+void Webserver::lirc_send(char *directive, char *remote, char *code)
 {
         const char *lircd = "/var/run/lirc/lircd";
         const char *prog = "webserver";
