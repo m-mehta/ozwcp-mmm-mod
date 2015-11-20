@@ -36,7 +36,7 @@ INCLUDES := -I $(OPENZWAVE)/cpp/src -I $(OPENZWAVE)/cpp/src/command_classes/ \
 LIBZWAVE := $(wildcard $(OPENZWAVE)/*.a)
 LIBUSB := -ludev
 LIBCURL := -lcurl
-LIBLIRC := /home/pi/lirc-git/lirc-0.9.2/lib/lirc_client.lo
+LIBLIRC := /home/pi/lirc-git/lirc-0.9.2/lib/.libs/lirc_client.o
 LIBS := $(LIBZWAVE) $(GNUTLS) $(LIBMICROHTTPD) -pthread $(LIBUSB) $(LIBCURL) $(LIBLIRC)
 
 # for Mac OS X comment out above 2 lines and uncomment next 5 lines
