@@ -104,11 +104,11 @@ extern int debug;
 
 void lirc_send(char *directive, char *remote, char *code)
 {
-        const char *lircd = LIRCD;
+        const char *lircd = "/var/run/lirc/lircd";
         const char *prog = "webserver";
         int fd;
         int r;
-        lirc_cmd_ctx *ctx;
+        lirc_cmd_ctx ctx;
         
 		fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
         if (fd < 0) {
@@ -120,7 +120,7 @@ void lirc_send(char *directive, char *remote, char *code)
 				fprintf(stderr, "%s: input too long\n", prog);
 		lirc_command_reply_to_stdout(&ctx);
 		do {
-                r = lirc_command_run(ctx, fd);
+                r = lirc_command_run(&ctx, fd);
                 if (r != 0 && r != EAGAIN)
                         fprintf(stderr,
                                 "Error running command: %s\n", strerror(r));
