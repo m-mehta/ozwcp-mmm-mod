@@ -104,11 +104,11 @@ extern int debug;
 
 void lirc_send(char *directive, char *remote, char *code)
 {
-        const char* lircd = LIRCD;
+        const char *lircd = LIRCD;
         const char *prog = "webserver";
         int fd;
         int r;
-        lirc_cmd_ctx ctx;
+        lirc_cmd_ctx *ctx;
         
 		fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
         if (fd < 0) {
@@ -1154,7 +1154,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 			if (*up_data_size != 0) {
 				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
 				*up_data_size = 0;
-				lirc_send("SEND_ONCE", "Samsung", "KEY_MUTE");
+				lirc_send((char*)"SEND_ONCE", (char*)"Samsung", (char*)"KEY_MUTE");
 				/*MyValue *val = MyNode::lookup(string((char *)cp->conn_arg1));
 				if (val != NULL) {
 					string arg = (char *)cp->conn_arg2;
