@@ -105,10 +105,10 @@ extern int debug;
 void lirc_send(char *directive, char *remote, char *code)
 {
         const char* lircd = LIRCD;
+        const char *prog = "webserver";
         int fd;
         int r;
         lirc_cmd_ctx ctx;
-        const char *prog = "webserver";
         
 		fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
         if (fd < 0) {

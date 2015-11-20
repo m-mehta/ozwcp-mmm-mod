@@ -36,7 +36,8 @@ INCLUDES := -I $(OPENZWAVE)/cpp/src -I $(OPENZWAVE)/cpp/src/command_classes/ \
 LIBZWAVE := $(wildcard $(OPENZWAVE)/*.a)
 LIBUSB := -ludev
 LIBCURL := -lcurl
-LIBS := $(LIBZWAVE) $(GNUTLS) $(LIBMICROHTTPD) -pthread $(LIBUSB) $(LIBCURL)
+LIBLIRC := -llirc
+LIBS := $(LIBZWAVE) $(GNUTLS) $(LIBMICROHTTPD) -pthread $(LIBUSB) $(LIBCURL) $(LIBLIRC)
 
 # for Mac OS X comment out above 2 lines and uncomment next 5 lines
 #ARCH := -arch i386 -arch x86_64
