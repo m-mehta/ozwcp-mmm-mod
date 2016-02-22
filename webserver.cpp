@@ -89,8 +89,8 @@ unsigned short Webserver::port = 0;
 bool Webserver::ready = false;
 CURL *Webserver::curl = NULL;
 CURLcode Webserver::res = CURLE_OK;
-char *Webserver::lircds[MAXDEVS] = NULL;
-char *Webserver::webdevs[MAXDEVS] = NULL;
+char *Webserver::lircds[MAXDEVS] = {NULL};
+char *Webserver::webdevs[MAXDEVS] = {NULL};
 
 extern pthread_mutex_t nlock;
 extern MyNode *nodes[];
@@ -1217,7 +1217,8 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				if (curl) {
 					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0);
 					if (temppath!=NULL) {
-						strcat(strcpy(tempstr, webdevs[strtol((char *)cp->conn_arg1,NULL,10)]),temppath);
+						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
+						strcat(strcpy(tempstr, tempaddr),temppath);
 						curl_free(temppath);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
@@ -1555,27 +1556,29 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 	}
 	TiXmlDocument config("./config.xml");
 	config.LoadFile();
-	TiXmlHandle conHandle(&config);
-	TiXmlElement* child = conHandle.FirstChild("protocol");
-	for (child; child; child=child->NextSiblingElement("protocol")) {
-		if (strcmp(child->Attribute("type"), "LIRC") == 0) {
-			//load lircds
-			TiXmlElement* host = child.FirstChild("host");
-			int i=0;
-			for (host; host; host=host->NextSiblingElement("host")) {
-				if (i>=MAXDEVS) break;
-				lircds[i]=strdup(host->Attribute("addr"));
-				i++;
+	TiXmlElement* child;
+	
+	for (child = config->FirstChild("protocol"); child; child=child->NextSiblingElement("protocol")) {
+		if (child!=NULL) {
+			if (strcmp(child->Attribute("type"), "LIRC") == 0) {
+				//load lircds
+				TiXmlElement* host;
+				int i=0;
+				for (host = child->FirstChild("host"); host; host=host->NextSiblingElement("host")) {
+					if (i>=MAXDEVS || host==NULL) break;
+					lircds[i]=strdup(host->Attribute("addr"));
+					i++;
+				}
 			}
-		}
-		else if (strcmp(child->Attribute("type"), "WebDev") == 0) {
-			//load webdevs
-			host = child.FirstChild("device");
-			int i=0;
-			for (host; host; host=host->NextSiblingElement("device")) {
-				if (i>=MAXDEVS) break;
-				webdevs[i]=strdup(host->Attribute("addr"));
-				i++;
+			else if (strcmp(child->Attribute("type"), "WebDev") == 0) {
+				//load webdevs
+				TiXmlElement* host;
+				int i=0;
+				for (host = child->FirstChild("device"); host; host=host->NextSiblingElement("device")) {
+					if (i>=MAXDEVS || host==NULL) break;
+					lircds[i]=strdup(host->Attribute("addr"));
+					i++;
+				}
 			}
 		}
 	}
