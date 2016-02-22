@@ -786,7 +786,7 @@ int32 main(int32 argc, char* argv[])
 					goto bad;
 				break;
 			case 'd':
-			    devpath = dupstr(optarg);
+			    devpath = strdup(optarg);
 				if (!devpath) printf ("Out of memory, unable to use provided path to device.\n");
 			default:
 				bad:
