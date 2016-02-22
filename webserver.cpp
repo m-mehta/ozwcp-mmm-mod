@@ -105,7 +105,7 @@ extern bool noop;
 extern int debug;
 
 
-void Webserver::lirc_send(int server, char *directive, char *remote, char *code)
+void Webserver::lirc_send(long server, char *directive, char *remote, char *code)
 {
         char *lircd = NULL;
 		char *address = NULL;
@@ -1204,7 +1204,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 			if (*up_data_size != 0) {
 				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
 				*up_data_size = 0;
-				lirc_send(stoi(cp->conn_arg1), (char*)cp->conn_arg2, (char*)cp->conn_arg3, (char*)cp->conn_arg4);
+				lirc_send(strtol(cp->conn_arg1), (char*)cp->conn_arg2, (char*)cp->conn_arg3, (char*)cp->conn_arg4);
 				return MHD_YES;
 			} else
 				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
