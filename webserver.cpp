@@ -1215,7 +1215,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				
 				curl = curl_easy_init();
 				if (curl) {
-					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0,NULL);
+					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0);
 					if (temppath!=NULL)
 						strcat(strcpy(tempstr, webdevs[(char *)cp->conn_arg1]),temppath);
 						curl_free(temppath);

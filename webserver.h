@@ -78,8 +78,8 @@ class Webserver {
 		void *wdata;
 		static CURL *curl;
 		static CURLcode res;
-		char **lircds;
-		char **webdevs;
+		static char *lircds[];
+		static char *webdevs[];
 };
 void server_global_init();
 void server_global_cleanup();
