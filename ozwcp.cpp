@@ -774,7 +774,7 @@ int32 main(int32 argc, char* argv[])
 	extern char *optarg;
 	long webport;
 	char *ptr;
-    char *devpath;
+    char *devpath = NULL;
 	while ((i = getopt(argc, argv, "vp:d:")) != EOF)
 		switch (i) {
 			case 'v':
