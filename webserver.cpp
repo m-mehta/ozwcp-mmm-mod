@@ -1204,7 +1204,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 			if (*up_data_size != 0) {
 				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
 				*up_data_size = 0;
-				lirc_send(strtol(cp->conn_arg1), (char*)cp->conn_arg2, (char*)cp->conn_arg3, (char*)cp->conn_arg4);
+				lirc_send(strtol((char*)cp->conn_arg1,NULL,10), (char*)cp->conn_arg2, (char*)cp->conn_arg3, (char*)cp->conn_arg4);
 				return MHD_YES;
 			} else
 				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
@@ -1216,8 +1216,8 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				curl = curl_easy_init();
 				if (curl) {
 					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0);
-					if (temppath!=NULL)
-						strcat(strcpy(tempstr, webdevs[(char *)cp->conn_arg1]),temppath);
+					if (temppath!=NULL) {
+						strcat(strcpy(tempstr, webdevs[strtol((char *)cp->conn_arg1,NULL,10)]),temppath);
 						curl_free(temppath);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
