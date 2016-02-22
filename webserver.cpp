@@ -1079,7 +1079,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 		size_t *up_data_size, void **ptr)
 {
 	int ret;
-	char *tempstr[256];
+	char tempstr[256];
 	conninfo_t *cp;
 
 	if (debug)
@@ -1218,7 +1218,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0);
 					if (temppath!=NULL) {
 						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
-						strcat(strcpy(tempstr, "asdf"),temppath);
+						strcat(strcpy(tempstr, tempaddr),temppath);
 						curl_free(temppath);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
