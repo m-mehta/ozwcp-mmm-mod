@@ -34,7 +34,7 @@ INCLUDES := -I $(OPENZWAVE)/cpp/src -I $(OPENZWAVE)/cpp/src/command_classes/ \
 
 # for Linux uncomment out next three lines
 LIBZWAVE := $(wildcard $(OPENZWAVE)/*.a)
-LIBLIRC := $(LIRCPATH)lib/.libs/lirc_client.o
+LIBLIRC := $(LIRCPATH).libs/lirc_client.o
 
 LIBUSB := -ludev
 LIBCURL := -lcurl
