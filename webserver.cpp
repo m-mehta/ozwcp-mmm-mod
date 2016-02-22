@@ -42,7 +42,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <curl/curl.h>
-#include <lirc/lirc_client.h>
+#include <microhttpd.h>
 
 #include "Manager.h"
 #include "Driver.h"
@@ -57,9 +57,9 @@
 #include "ValueString.h"
 #include "tinyxml.h"
 
-#include "microhttpd.h"
 #include "ozwcp.h"
 #include "webserver.h"
+#include "lirc_client.h"
 
 using namespace OpenZWave;
 
@@ -70,6 +70,7 @@ using namespace OpenZWave;
 #define DEFAULT "<script type=\"text/javascript\"> document.location.href='/';</script>"
 #define EMPTY "<html></html>"
 #define DEVICE "/dev/ttyUSB0"
+#define MAXDEVS 20
 
 typedef struct _conninfo {
 		conntype_t conn_type;
@@ -88,6 +89,8 @@ unsigned short Webserver::port = 0;
 bool Webserver::ready = false;
 CURL *Webserver::curl = NULL;
 CURLcode Webserver::res = CURLE_OK;
+char *Webserver::lircds[MAXDEVS] = NULL;
+char *Webserver::webdevs[MAXDEVS] = NULL;
 
 extern pthread_mutex_t nlock;
 extern MyNode *nodes[];
@@ -102,20 +105,49 @@ extern bool noop;
 extern int debug;
 
 
-void Webserver::lirc_send(char *directive, char *remote, char *code)
+void Webserver::lirc_send(int server, char *directive, char *remote, char *code)
 {
-        const char *lircd = "/var/run/lirc/lircd";
-        const char *prog = "webserver";
+        char *lircd = NULL;
+		char *address = NULL;
+		unsigned short port = LIRC_INET_PORT;
+		const char *prog = "webserver";
         int fd;
         int r;
         lirc_cmd_ctx ctx;
-        
-		fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
+		
+		if (server) {
+		
+			char *p;
+			char *end;
+			unsigned long val;
+
+			address = strdup(lircds[server]);
+			if (!address) {
+				fprintf(stderr, "%s: out of memory\n", prog);
+			}
+			p = strchr(address, ':');
+			if (p != NULL) {
+				val = strtoul(p + 1, &end, 10);
+				if (!(*(p + 1)) || *end || val < 1 || val > USHRT_MAX) {
+					fprintf(stderr, "%s: invalid port number: %s\n", prog, p + 1);
+				}
+				port = (unsigned short)val;
+				*p = 0;
+			}
+			fd = lirc_get_remote_socket(address, port, 0);
+        	
+		} else {
+			fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
+		}
         if (fd < 0) {
                 fprintf(stderr, "%s: could not open socket: %s\n",
                         prog, strerror(-fd));
         }
-        r = lirc_command_init(&ctx, "%s %s %s\n", directive, remote, code);
+        
+		if (address) free(address);
+		address = NULL;
+		
+		r = lirc_command_init(&ctx, "%s %s %s\n", directive, remote, code);
 		if (r != 0)
 				fprintf(stderr, "%s: input too long\n", prog);
 		lirc_command_reply_to_stdout(&ctx);
@@ -1012,6 +1044,20 @@ int web_config_post (void *cls, enum MHD_ValueKind kind, const char *key, const 
 			cp->conn_arg1 = (void *)strdup(data);
 		else if (strcmp(key, "node") == 0)
 			cp->conn_arg2 = (void *)strdup(data);
+	} else if (strcmp(cp->conn_url, "/WebDevPost.html") == 0) {
+		if (strcmp(key, "host") == 0)
+			cp->conn_arg1 = (void *)strdup(data);
+		else if (strcmp(key, "path") == 0)
+			cp->conn_arg2 = (void *)strdup(data);
+	} else if (strcmp(cp->conn_url, "/IRPost.html") == 0) {
+		if (strcmp(key, "host") == 0)
+			cp->conn_arg1 = (void *)strdup(data);
+		else if (strcmp(key, "directive") == 0)
+			cp->conn_arg2 = (void *)strdup(data);
+		else if (strcmp(key, "remote") == 0)
+			cp->conn_arg3 = (void *)strdup(data);
+		else if (strcmp(key, "code") == 0)
+			cp->conn_arg4 = (void *)strdup(data);
 	}
 	return MHD_YES;
 }
@@ -1033,6 +1079,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 		size_t *up_data_size, void **ptr)
 {
 	int ret;
+	char *tempstr[256];
 	conninfo_t *cp;
 
 	if (debug)
@@ -1073,6 +1120,8 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 			ret = web_send_file(conn, "scenes.html", MHD_HTTP_OK, false);
 		else if (strcmp(url, "/cp.js") == 0)
 			ret = web_send_file(conn, "cp.js", MHD_HTTP_OK, false);
+		else if (strcmp(url, "/config.xml") == 0)
+			ret = web_send_file(conn, "config.xml", MHD_HTTP_OK, false);
 		else if (strcmp(url, "/favicon.png") == 0)
 			ret = web_send_file(conn, "openzwavetinyicon.png", MHD_HTTP_OK, false);
 		else if (strcmp(url, "/poll.xml") == 0 && (devname != NULL || usb))
@@ -1080,7 +1129,8 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 		else
 			ret = web_send_data(conn, UNKNOWN, MHD_HTTP_NOT_FOUND, false, false, NULL); // no free, no copy
 		return ret;
-	} else if (strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
+	} 
+	else if (strcmp(method, MHD_HTTP_METHOD_POST) == 0) {
 		cp = (conninfo_t *)*ptr;
 		if (strcmp(url, "/devpost.html") == 0) {
 			if (*up_data_size != 0) {
@@ -1154,39 +1204,29 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 			if (*up_data_size != 0) {
 				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
 				*up_data_size = 0;
-				lirc_send((char*)"SEND_ONCE", (char*)"Samsung", (char*)"KEY_MUTE");
-				/*MyValue *val = MyNode::lookup(string((char *)cp->conn_arg1));
-				if (val != NULL) {
-					string arg = (char *)cp->conn_arg2;
-					if (!Manager::Get()->SetValue(val->getId(), arg))
-						fprintf(stderr, "SetValue string failed type=%s\n", valueTypeStr(val->getId().GetType()));
-				} else {
-					fprintf(stderr, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
-				}
-				*/return MHD_YES;
+				lirc_send(stoi(cp->conn_arg1), (char*)cp->conn_arg2, (char*)cp->conn_arg3, (char*)cp->conn_arg4);
+				return MHD_YES;
 			} else
 				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
-		} else if (strcmp(url, "/rokuPost.html") == 0) {
+		} else if (strcmp(url, "/WebDevPost.html") == 0) {
 			if (*up_data_size != 0) {
 				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
 				*up_data_size = 0;
+				
 				curl = curl_easy_init();
 				if (curl) {
-					curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.1.116:8060/keypress/right");
-					curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
-					res = curl_easy_perform(curl);
+					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0,NULL);
+					if (temppath!=NULL)
+						strcat(strcpy(tempstr, webdevs[(char *)cp->conn_arg1]),temppath);
+						curl_free(temppath);
+						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
+						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
+						res = curl_easy_perform(curl);
+					}
 					if (res != CURLE_OK) fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
 					curl_easy_cleanup(curl);
 				}
-/*				MyValue *val = MyNode::lookup(string((char *)cp->conn_arg1));
-				if (val != NULL) {
-					string arg = (char *)cp->conn_arg2;
-					if (!Manager::Get()->SetValue(val->getId(), arg))
-						fprintf(stderr, "SetValue string failed type=%s\n", valueTypeStr(val->getId().GetType()));
-				} else {
-					fprintf(stderr, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
-				}
-*/				return MHD_YES;
+				return MHD_YES;
 			} else
 				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
 		} else if (strcmp(url, "/buttonpost.html") == 0) {
@@ -1448,7 +1488,8 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 		} else
 			ret = web_send_data(conn, UNKNOWN, MHD_HTTP_NOT_FOUND, false, false, NULL); // no free, no copy
 		return ret;
-	} else
+	} 
+	else
 		return MHD_NO;
 }
 
@@ -1491,7 +1532,7 @@ void Webserver::Free (struct MHD_Connection *conn, void **ptr, enum MHD_RequestT
  * Start up the web server
  */
 
-Webserver::Webserver (int const wport) : sortcol(COL_NODE), logbytes(0), adminstate(false)
+Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbytes(0), adminstate(false)
 {
 	fprintf(stderr, "webserver starting port %d\n", wport);
 	port = wport;
@@ -1503,14 +1544,40 @@ Webserver::Webserver (int const wport) : sortcol(COL_NODE), logbytes(0), adminst
 		ready = true;
 	}
 	if (devname == NULL) {
-		devname = (char *)malloc(strlen(DEVICE) + 1);
+		devname = (char *)malloc(strlen(devarg ? devarg : DEVICE) + 1);
 		if (devname == NULL) {
 			fprintf(stderr, "Out of memory open devname\n");
 			exit(1);
 		}
 		usb = false;
-		strcpy(devname, DEVICE);
+		strcpy(devname, devarg ? devarg : DEVICE);
 		Manager::Get()->AddDriver(devname);
+	}
+	TiXmlDocument config("./config.xml");
+	config.LoadFile();
+	TiXmlHandle conHandle(&config);
+	TiXmlElement* child = conHandle.FirstChild("protocol");
+	for (child; child; child=child->NextSiblingElement("protocol")) {
+		if (strcmp(child->Attribute("type"), "LIRC") == 0) {
+			//load lircds
+			TiXmlElement* host = child.FirstChild("host");
+			int i=0;
+			for (host; host; host=host->NextSiblingElement("host")) {
+				if (i>=MAXDEVS) break;
+				lircds[i]=strdup(host->Attribute("addr"));
+				i++;
+			}
+		}
+		else if (strcmp(child->Attribute("type"), "WebDev") == 0) {
+			//load webdevs
+			host = child.FirstChild("device");
+			int i=0;
+			for (host; host; host=host->NextSiblingElement("device")) {
+				if (i>=MAXDEVS) break;
+				webdevs[i]=strdup(host->Attribute("addr"));
+				i++;
+			}
+		}
 	}
 }
 

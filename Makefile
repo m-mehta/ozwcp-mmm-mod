@@ -22,21 +22,24 @@ CFLAGS	:= -c $(DEBUG_CFLAGS)
 LDFLAGS	:= $(DEBUG_LDFLAGS)
 
 OPENZWAVE := ../open-zwave
-LIBMICROHTTPD := /usr/local/lib/libmicrohttpd.a
+LIRCPATH := ../lirc-0.9.2/lib/
 
 INCLUDES := -I $(OPENZWAVE)/cpp/src -I $(OPENZWAVE)/cpp/src/command_classes/ \
 	-I $(OPENZWAVE)/cpp/src/value_classes/ -I $(OPENZWAVE)/cpp/src/platform/ \
 	-I $(OPENZWAVE)/cpp/src/platform/unix -I $(OPENZWAVE)/cpp/tinyxml/ \
-	-I ../libmicrohttpd/src/include
+	-I $(LIRCPATH)
 
 # Remove comment below for gnutls support
 #GNUTLS := -lgnutls
 
 # for Linux uncomment out next three lines
 LIBZWAVE := $(wildcard $(OPENZWAVE)/*.a)
+LIBLIRC := $(LIRCPATH)lib/.libs/lirc_client.o
+
 LIBUSB := -ludev
 LIBCURL := -lcurl
-LIBLIRC := /home/pi/lirc-git/lirc-0.9.2/lib/.libs/lirc_client.o
+LIBMICROHTTPD := -lmicrohttpd
+
 LIBS := $(LIBZWAVE) $(GNUTLS) $(LIBMICROHTTPD) -pthread $(LIBUSB) $(LIBCURL) $(LIBLIRC)
 
 # for Mac OS X comment out above 2 lines and uncomment next 5 lines
@@ -74,7 +77,7 @@ ozwcp:	ozwcp.o webserver.o zwavelib.o $(LIBZWAVE)
 
 dist:	ozwcp
 	rm -f ozwcp.tar.gz
-	tar -c --exclude=".svn" -hvzf ozwcp.tar.gz ozwcp config/ cp.html cp.js openzwavetinyicon.png README
+	tar -c --exclude=".svn" -hvzf ozwcp.tar.gz ozwcp config/ index.html cp.html cp.js openzwavetinyicon.png README
 
 clean:
 	rm -f ozwcp *.o

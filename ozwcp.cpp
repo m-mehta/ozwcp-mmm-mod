@@ -43,6 +43,7 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <microhttpd.h>
 
 #include "Options.h"
 #include "Manager.h"
@@ -51,9 +52,10 @@
 #include "Notification.h"
 #include "Log.h"
 
-#include "microhttpd.h"
 #include "ozwcp.h"
 #include "webserver.h"
+
+#define CONFIGPATH "./config/"
 
 using namespace OpenZWave;
 
@@ -772,10 +774,10 @@ int32 main(int32 argc, char* argv[])
 	extern char *optarg;
 	long webport;
 	char *ptr;
-
-	while ((i = getopt(argc, argv, "dp:")) != EOF)
+    char *devpath;
+	while ((i = getopt(argc, argv, "vp:d:")) != EOF)
 		switch (i) {
-			case 'd':
+			case 'v':
 				debug = 1;
 				break;
 			case 'p':
@@ -783,26 +785,29 @@ int32 main(int32 argc, char* argv[])
 				if (ptr == optarg)
 					goto bad;
 				break;
+			case 'd':
+			    devpath = dupstr(optarg);
+				if (!devpath) printf ("Out of memory, unable to use provided path to device.\n");
 			default:
 				bad:
-				fprintf(stderr, "usage: ozwcp [-d] -p <port>\n");
+				fprintf(stderr, "usage: ozwcp [-v] -p <port> [-d </path/to/dev>]\n");
 			exit(1);
 		}
 
 	for (i = 0; i < MAX_NODES; i++)
 		nodes[i] = NULL;
 	server_global_init(); //required to make this call to setup curl before threading 
-	Options::Create("./config/", "", "--SaveConfiguration=true --DumpTriggerLevel=0");
+	Options::Create(CONFIGPATH, "", "--SaveConfiguration=true --DumpTriggerLevel=0");
 	Options::Get()->Lock();
 
 	Manager::Create();
-	wserver = new Webserver(webport);
+	wserver = new Webserver(webport,devpath);
 	Manager::Get()->AddWatcher(OnNotification, wserver);
 
 	while (!wserver->isReady()) {
 		delete wserver;
 		sleep(2);
-		wserver = new Webserver(webport);
+		wserver = new Webserver(webport,devpath);
 	}
 
 	while (!done) {	// now wait until we are done
@@ -810,6 +815,7 @@ int32 main(int32 argc, char* argv[])
 	}
 
 	delete wserver;
+	free(devpath);
 	Manager::Get()->RemoveWatcher(OnNotification, NULL);
 	Manager::Destroy();
 	Options::Destroy();

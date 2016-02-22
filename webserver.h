@@ -40,7 +40,7 @@ typedef enum { CON_UNK, CON_GET, CON_POST } conntype_t;
 
 class Webserver {
 	public:
-		Webserver(int const);
+		Webserver(int const wport, char* devarg);
 		~Webserver();
 		bool isReady() { return ready; }
 		bool getAdminState() { return adminstate; }
@@ -78,6 +78,8 @@ class Webserver {
 		void *wdata;
 		static CURL *curl;
 		static CURLcode res;
+		char **lircds;
+		char **webdevs;
 };
 void server_global_init();
 void server_global_cleanup();
