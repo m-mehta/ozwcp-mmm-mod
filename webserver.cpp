@@ -1218,7 +1218,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0);
 					if (temppath!=NULL) {
 						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
-						strcat(strcpy(tempstr, tempaddr),temppath);
+						strcat(strcpy(tempstr, "asdf"),temppath);
 						curl_free(temppath);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
@@ -1558,13 +1558,13 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 	config.LoadFile();
 	TiXmlElement* child;
 	
-	for (child = config->FirstChild("protocol"); child; child=child->NextSiblingElement("protocol")) {
+	for (child = config.FirstChildElement("protocol"); child; child=child->NextSiblingElement("protocol")) {
 		if (child!=NULL) {
 			if (strcmp(child->Attribute("type"), "LIRC") == 0) {
 				//load lircds
 				TiXmlElement* host;
 				int i=0;
-				for (host = child->FirstChild("host"); host; host=host->NextSiblingElement("host")) {
+				for (host = child->FirstChildElement("host"); host; host=host->NextSiblingElement("host")) {
 					if (i>=MAXDEVS || host==NULL) break;
 					lircds[i]=strdup(host->Attribute("addr"));
 					i++;
@@ -1574,7 +1574,7 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 				//load webdevs
 				TiXmlElement* host;
 				int i=0;
-				for (host = child->FirstChild("device"); host; host=host->NextSiblingElement("device")) {
+				for (host = child->FirstChildElement("device"); host; host=host->NextSiblingElement("device")) {
 					if (i>=MAXDEVS || host==NULL) break;
 					lircds[i]=strdup(host->Attribute("addr"));
 					i++;
