@@ -64,6 +64,7 @@ pthread_mutex_t nlock = PTHREAD_MUTEX_INITIALIZER;
 MyNode *nodes[MAX_NODES];
 int32 MyNode::nodecount = 0;
 pthread_mutex_t glock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t curl_lock = PTHREAD_MUTEX_INITIALIZER;
 bool done = false;
 bool needsave = false;
 bool noop = false;
@@ -797,6 +798,8 @@ int32 main(int32 argc, char* argv[])
 	for (i = 0; i < MAX_NODES; i++)
 		nodes[i] = NULL;
 	server_global_init(); //required to make this call to setup curl before threading 
+	if (pthread_mutex_init(&curl_lock,NULL) != 0)
+		fprintf(stderr, "Failed to initialize curl mutex lock.\n");
 	Options::Create(CONFIGPATH, "", "--SaveConfiguration=true --DumpTriggerLevel=0");
 	Options::Get()->Lock();
 
@@ -813,7 +816,7 @@ int32 main(int32 argc, char* argv[])
 	while (!done) {	// now wait until we are done
 		sleep(1);
 	}
-
+	pthread_mutex_destroy(&curl_lock);
 	delete wserver;
 	free(devpath);
 	Manager::Get()->RemoveWatcher(OnNotification, NULL);
