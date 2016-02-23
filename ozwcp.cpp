@@ -42,6 +42,8 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <syslog.h>
 #include <netinet/in.h>
 #include <microhttpd.h>
 
@@ -177,7 +179,7 @@ void MyNode::removeValue (ValueID id)
 		}
 	}
 	if (!found)
-		fprintf(stderr, "removeValue not found Home 0x%08x Node %d Genre %s Class %s Instance %d Index %d Type %s\n",
+		syslog(LOG_ERR, "removeValue not found Home 0x%08x Node %d Genre %s Class %s Instance %d Index %d Type %s\n",
 				id.GetHomeId(), id.GetNodeId(), valueGenreStr(id.GetGenre()),
 				cclassStr(id.GetCommandClassId()), id.GetInstance(), id.GetIndex(),
 				valueTypeStr(id.GetType()));
@@ -219,7 +221,7 @@ void MyNode::newGroup (uint8 node)
  */
 void MyNode::addGroup (uint8 node, uint8 g, uint8 n, InstanceAssociation *v)
 {
-	fprintf(stderr, "addGroup: node %d group %d n %d\n", node, g, n);
+	syslog(LOG_ERR, "addGroup: node %d group %d n %d\n", node, g, n);
 	if (groups.size() == 0)
 		newGroup(node);
 	for (vector<MyGroup*>::iterator it = groups.begin(); it != groups.end(); ++it)
@@ -237,7 +239,7 @@ void MyNode::addGroup (uint8 node, uint8 g, uint8 n, InstanceAssociation *v)
 			setChanged(true);
 			return;
 		}
-	fprintf(stderr, "addgroup: node %d group %d not found in list\n", node, g);
+	syslog(LOG_ERR, "addgroup: node %d group %d not found in list\n", node, g);
 }
 
 /*
@@ -265,12 +267,12 @@ void MyNode::updateGroup (uint8 node, uint8 grp, char *glist)
 	uint8 n;
 	uint8 j;
 
-	fprintf(stderr, "updateGroup: node %d group %d\n", node, grp);
+	syslog(LOG_ERR, "updateGroup: node %d group %d\n", node, grp);
 	for (it = groups.begin(); it != groups.end(); ++it)
 		if ((*it)->groupid == grp)
 			break;
 	if (it == groups.end()) {
-		fprintf(stderr, "updateGroup: node %d group %d not found\n", node, grp);
+		syslog(LOG_ERR, "updateGroup: node %d group %d not found\n", node, grp);
 		return;
 	}
 	n = 0;
@@ -327,7 +329,7 @@ void MyNode::updatePoll(char *ilist, char *plist)
 		polls.push_back(*np == '1' ? true : false);
 	}
 	if (ids.size() != polls.size()) {
-		fprintf(stderr, "updatePoll: size of ids %d not same as size of polls %d\n",
+		syslog(LOG_ERR, "updatePoll: size of ids %d not same as size of polls %d\n",
 				ids.size(), polls.size());
 		return;
 	}
@@ -336,18 +338,18 @@ void MyNode::updatePoll(char *ilist, char *plist)
 	while (it != ids.end() && pit != polls.end()) {
 		v = lookup(*it);
 		if (v == NULL) {
-			fprintf(stderr, "updatePoll: value %s not found\n", *it);
+			syslog(LOG_ERR, "updatePoll: value %s not found\n", *it);
 			continue;
 		}
 		/* if poll requested, see if not on list */
 		if (*pit) {
 			if (!Manager::Get()->isPolled(v->getId()))
 				if (!Manager::Get()->EnablePoll(v->getId()))
-					fprintf(stderr, "updatePoll: enable polling for %s failed\n", *it);
+					syslog(LOG_ERR, "updatePoll: enable polling for %s failed\n", *it);
 		} else {			// polling not requested and it is on, turn it off
 			if (Manager::Get()->isPolled(v->getId()))
 				if (!Manager::Get()->DisablePoll(v->getId()))
-					fprintf(stderr, "updatePoll: disable polling for %s failed\n", *it);
+					syslog(LOG_ERR, "updatePoll: disable polling for %s failed\n", *it);
 		}
 		++it;
 		++pit;
@@ -788,18 +790,67 @@ int32 main(int32 argc, char* argv[])
 				break;
 			case 'd':
 			    devpath = strdup(optarg);
-				if (!devpath) printf ("Out of memory, unable to use provided path to device.\n");
+				if (!devpath) fprintf (stderr, "Out of memory, unable to use provided path to device.\n");
 			default:
 				bad:
 				fprintf(stderr, "usage: ozwcp [-v] -p <port> [-d </path/to/dev>]\n");
 			exit(1);
 		}
-
 	for (i = 0; i < MAX_NODES; i++)
 		nodes[i] = NULL;
+		
+	// Begin Daemonize	
+	pid_t pid, sid;
+
+    /* Fork off the parent process */
+    pid = fork();
+
+    /* An error occurred */
+    if (pid < 0)
+        exit(EXIT_FAILURE);
+
+    /* Success: Let the parent terminate */
+    if (pid > 0)
+        exit(EXIT_SUCCESS);
+
+    /* On success: The child process becomes session leader */
+	sid = setsid();
+    if (setsid() < 0)
+        exit(EXIT_FAILURE);
+
+    /* Catch, ignore and handle signals */
+    //TODO: Implement a working signal handler */
+    signal(SIGCHLD, SIG_IGN);
+    signal(SIGHUP, SIG_IGN);
+
+    /* Fork off for the second time*/
+    pid = fork();
+
+    /* An error occurred */
+    if (pid < 0)
+        exit(EXIT_FAILURE);
+
+    /* Success: Let the parent terminate */
+    if (pid > 0)
+        exit(EXIT_SUCCESS);
+
+    /* Set new file permissions */
+    umask(0);
+
+    /* Change the working directory to the appropriate directory */
+    chdir("/var/ozwcp");
+
+    /* Close all std file descriptors */
+    close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+
+    /* Open the log file */
+    openlog ("ozwd", LOG_PID, LOG_USER);
+	
 	server_global_init(); //required to make this call to setup curl before threading 
 	if (pthread_mutex_init(&curl_lock,NULL) != 0)
-		fprintf(stderr, "Failed to initialize curl mutex lock.\n");
+		syslog(LOG_ERR, "Failed to initialize curl mutex lock.\n");
 	Options::Create(CONFIGPATH, "", "--SaveConfiguration=true --DumpTriggerLevel=0");
 	Options::Get()->Lock();
 

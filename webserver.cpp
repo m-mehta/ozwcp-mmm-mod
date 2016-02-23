@@ -124,27 +124,27 @@ void Webserver::lirc_send(long server, char *directive, char *remote, char *code
 
 			address = strdup(lircds[server]);
 			if (!address) {
-				fprintf(stderr, "%s: out of memory\n", prog);
+				syslog(LOG_ERR, "%s: out of memory\n", prog);
 			}
 			p = strchr(address, ':');
 			if (p != NULL) {
 				val = strtoul(p + 1, &end, 10);
 				if (!(*(p + 1)) || *end || val < 1 || val > USHRT_MAX) {
-					fprintf(stderr, "%s: invalid port number: %s\n", prog, p + 1);
+					syslog(LOG_ERR, "%s: invalid port number: %s\n", prog, p + 1);
 					return;
 				}
 				port = (unsigned short)val;
 				*p = 0;
 			}
-			fprintf(stdout,"Connnecting to remote lircd socket %s\n",address);
+			syslog(LOG_NOTICE,"Connnecting to remote lircd socket %s\n",address);
 			fd = lirc_get_remote_socket(address, port, 0);
         	
 		} else {
-			fprintf(stdout,"Connnecting to local lircd socket %s\n",lircd);
+			syslog(LOG_NOTICE,"Connnecting to local lircd socket %s\n",lircd);
 			fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
 		}
         if (fd < 0) {
-                fprintf(stderr, "%s: could not open socket: %s\n",
+                syslog(LOG_ERR, "%s: could not open socket: %s\n",
                         prog, strerror(-fd));
 				return;
         }
@@ -154,18 +154,18 @@ void Webserver::lirc_send(long server, char *directive, char *remote, char *code
 		
 		r = lirc_command_init(&ctx, "%s %s %s\n", directive, remote, code);
 		if (r != 0) {
-				fprintf(stderr, "%s: input too long\n", prog);
+				syslog(LOG_ERR, "%s: input too long\n", prog);
 		}
 		lirc_command_reply_to_stdout(&ctx);
 		do {
                 r = lirc_command_run(&ctx, fd);
                 if (r != 0 && r != EAGAIN)
-                        fprintf(stderr,
+                        syslog(LOG_ERR,
                                 "Error running command: %s\n", strerror(r));
         } while (r == EAGAIN);
 		r = (r==0) ? 0 : -1;
 		if (r == -1)
-				fprintf(stderr, "%s: %s failed.\n", prog, directive);
+				syslog(LOG_ERR, "%s: %s failed.\n", prog, directive);
         close(fd);
 }
 
@@ -239,7 +239,7 @@ int web_send_file (struct MHD_Connection *conn, const char *filename, const int 
 			int len = strlen(FNF) + strlen(filename) - 1; // len(%s) + 1 for \0
 			char *s = (char *)malloc(len);
 			if (s == NULL) {
-				fprintf(stderr, "Out of memory FNF\n");
+				syslog(LOG_ERR, "Out of memory FNF\n");
 				exit(1);
 			}
 			snprintf(s, len, FNF, filename);
@@ -335,7 +335,7 @@ void Webserver::web_get_values (int i, TiXmlElement *ep)
 			if (id.GetType() == ValueID::ValueType_Decimal) {
 				uint8 precision;
 				if (Manager::Get()->GetValueFloatPrecision(id, &precision))
-					fprintf(stderr, "node = %d id = %d value = %s precision = %d\n", i, j, str.c_str(), precision);
+					syslog(LOG_ERR, "node = %d id = %d value = %s precision = %d\n", i, j, str.c_str(), precision);
 			}
 			valueElement->LinkEndChild(textElement);
 		}
@@ -390,7 +390,7 @@ const char *Webserver::SendTopoResponse (struct MHD_Connection *conn, const char
 						if (k < (len - 1))
 							list += ",";
 					}
-					fprintf(stderr, "topo: node=%d %s\n", i, list.c_str());
+					syslog(LOG_ERR, "topo: node=%d %s\n", i, list.c_str());
 					TiXmlText *textElement = new TiXmlText(list.c_str());
 					nodeElement->LinkEndChild(textElement);
 					topoElement->LinkEndChild(nodeElement);
@@ -616,7 +616,7 @@ const char *Webserver::SendSceneResponse (struct MHD_Connection *conn, const cha
 	if (strcmp(fun, "create") == 0) {
 		sid = Manager::Get()->CreateScene();
 		if (sid == 0) {
-			fprintf(stderr, "sid = 0, out of scene ids\n");
+			syslog(LOG_ERR, "sid = 0, out of scene ids\n");
 			return EMPTY;
 		}
 	}
@@ -641,13 +641,13 @@ const char *Webserver::SendSceneResponse (struct MHD_Connection *conn, const cha
 			if (val != NULL) {
 				if (strcmp(fun, "addvalue") == 0) {
 					if (!Manager::Get()->AddSceneValue(sid, val->getId(), string(arg3)))
-						fprintf(stderr, "AddSceneValue failure\n");
+						syslog(LOG_ERR, "AddSceneValue failure\n");
 				} else if (strcmp(fun, "update") == 0) {
 					if (!Manager::Get()->SetSceneValue(sid, val->getId(), string(arg3)))
-						fprintf(stderr, "SetSceneValue failure\n");
+						syslog(LOG_ERR, "SetSceneValue failure\n");
 				} else if (strcmp(fun, "remove") == 0) {
 					if (!Manager::Get()->RemoveSceneValue(sid, val->getId()))
-						fprintf(stderr, "RemoveSceneValue failure\n");
+						syslog(LOG_ERR, "RemoveSceneValue failure\n");
 				}
 			}
 		}
@@ -831,10 +831,10 @@ int Webserver::SendPollResponse (struct MHD_Connection *conn)
 				nodeElement->SetAttribute("security", Manager::Get()->IsNodeSecurityDevice(homeId, i) ? "true" : "false");
 				nodeElement->SetAttribute("time", nodes[i]->getTime());
 #if 0
-				fprintf(stderr, "i=%d failed=%d\n", i, Manager::Get()->IsNodeFailed(homeId, i));
-				fprintf(stderr, "i=%d awake=%d\n", i, Manager::Get()->IsNodeAwake(homeId, i));
-				fprintf(stderr, "i=%d state=%s\n", i, Manager::Get()->GetNodeQueryStage(homeId, i).c_str());
-				fprintf(stderr, "i=%d listening=%d flirs=%d\n", i, listening, flirs);
+				syslog(LOG_ERR, "i=%d failed=%d\n", i, Manager::Get()->IsNodeFailed(homeId, i));
+				syslog(LOG_ERR, "i=%d awake=%d\n", i, Manager::Get()->IsNodeAwake(homeId, i));
+				syslog(LOG_ERR, "i=%d state=%s\n", i, Manager::Get()->GetNodeQueryStage(homeId, i).c_str());
+				syslog(LOG_ERR, "i=%d listening=%d flirs=%d\n", i, listening, flirs);
 #endif
 				if (Manager::Get()->IsNodeFailed(homeId, i))
 					nodeElement->SetAttribute("status", "Dead");
@@ -966,7 +966,7 @@ int web_config_post (void *cls, enum MHD_ValueKind kind, const char *key, const 
 {
 	conninfo_t *cp = (conninfo_t *)cls;
 
-	fprintf(stderr, "post: key=%s data=%s size=%d\n", key, data, size);
+	syslog(LOG_ERR, "post: key=%s data=%s size=%d\n", key, data, size);
 	if (strcmp(cp->conn_url, "/devpost.html") == 0) {
 		if (strcmp(key, "fn") == 0)
 			cp->conn_arg1 = (void *)strdup(data);
@@ -1090,7 +1090,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 	conninfo_t *cp;
 
 	if (debug)
-		fprintf(stderr, "%x: %s: \"%s\" conn=%x size=%d *ptr=%x\n", pthread_self(), method, url, conn, *up_data_size, *ptr);
+		syslog(LOG_ERR, "%x: %s: \"%s\" conn=%x size=%d *ptr=%x\n", pthread_self(), method, url, conn, *up_data_size, *ptr);
 	if (*ptr == NULL) {	/* do never respond on first call */
 		cp = (conninfo_t *)malloc(sizeof(conninfo_t));
 		if (cp == NULL)
@@ -1154,7 +1154,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 						} else {
 							devname = (char *)malloc(strlen((char *)cp->conn_arg2) + 1);
 							if (devname == NULL) {
-								fprintf(stderr, "Out of memory open devname\n");
+								syslog(LOG_ERR, "Out of memory open devname\n");
 								exit(1);
 							}
 							usb = false;
@@ -1163,7 +1163,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 						}
 					}
 				} else if (strcmp((char *)cp->conn_arg1, "close") == 0) { /* terminate */
-					fprintf(stdout, "remove driver Terminate\n");
+					syslog(LOG_NOTICE, "remove driver Terminate\n");
 					if (devname != NULL || usb)
 						Manager::Get()->RemoveDriver(devname ? devname : "HID Controller");
 					if (devname != NULL) {
@@ -1177,7 +1177,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				} else if (strcmp((char *)cp->conn_arg1, "sreset") == 0) { /* soft reset */
 					Manager::Get()->SoftReset(homeId);
 				} else if (strcmp((char *)cp->conn_arg1, "exit") == 0) { /* exit */
-					fprintf(stdout, "remove driver exit\n");
+					syslog(LOG_NOTICE, "remove driver exit\n");
 					pthread_mutex_lock(&glock);
 					if (devname != NULL || usb) {
 						Manager::Get()->RemoveDriver(devname ? devname : "HID Controller");
@@ -1200,9 +1200,9 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				if (val != NULL) {
 					string arg = (char *)cp->conn_arg2;
 					if (!Manager::Get()->SetValue(val->getId(), arg))
-						fprintf(stderr, "SetValue string failed type=%s\n", valueTypeStr(val->getId().GetType()));
+						syslog(LOG_ERR, "SetValue string failed type=%s\n", valueTypeStr(val->getId().GetType()));
 				} else {
-					fprintf(stderr, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
+					syslog(LOG_ERR, "Can't find ValueID for %s\n", (char *)cp->conn_arg1);
 				}
 				return MHD_YES;
 			} else
@@ -1226,12 +1226,12 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 					//if (temppath!=NULL) {y
 						strcat(strcpy(tempstr,webdevs[strtol((char *)cp->conn_arg1,NULL,10)]),(char *)cp->conn_arg2);
 						//curl_free(temppath);
-						fprintf(stdout, "Posting to url: %s\n", tempstr);
+						syslog(LOG_NOTICE, "Posting to url: %s\n", tempstr);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 						res = curl_easy_perform(curl);
 					//}
-					if (res != CURLE_OK) fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
+					if (res != CURLE_OK) syslog(LOG_ERR, "curl failed: %s\n", curl_easy_strerror(res));
 					curl_easy_cleanup(curl);
 				}
 				pthread_mutex_unlock(&curl_lock);
@@ -1247,10 +1247,10 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 					string arg = (char *)cp->conn_arg2;
 					if ((char *)cp->conn_arg2 != NULL && strcmp((char *)cp->conn_arg2, "true") == 0) {
 						if (!Manager::Get()->PressButton(val->getId()))
-							fprintf(stderr, "PressButton failed");
+							syslog(LOG_ERR, "PressButton failed");
 					} else {
 						if (!Manager::Get()->ReleaseButton(val->getId()))
-							fprintf(stderr, "ReleaseButton failed");
+							syslog(LOG_ERR, "ReleaseButton failed");
 					}
 				}
 				return MHD_YES;
@@ -1543,7 +1543,7 @@ void Webserver::Free (struct MHD_Connection *conn, void **ptr, enum MHD_RequestT
 
 Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbytes(0), adminstate(false)
 {
-	fprintf(stderr, "webserver starting port %d\n", wport);
+	syslog(LOG_ERR, "webserver starting port %d\n", wport);
 	port = wport;
 	wdata = MHD_start_daemon(MHD_USE_THREAD_PER_CONNECTION | MHD_USE_DEBUG, port,
 			NULL, NULL, &Webserver::HandlerEP, this,
@@ -1555,7 +1555,7 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 	if (devname == NULL) {
 		devname = (char *)malloc(strlen(devarg ? devarg : DEVICE) + 1);
 		if (devname == NULL) {
-			fprintf(stderr, "Out of memory open devname\n");
+			syslog(LOG_ERR, "Out of memory open devname\n");
 			exit(1);
 		}
 		usb = false;
@@ -1575,7 +1575,7 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 				for (host = child->FirstChildElement("host"); host; host=host->NextSiblingElement("host")) {
 					if (i>=MAXDEVS || host==NULL) break;
 					lircds[i]=strdup(host->Attribute("addr"));
-					fprintf(stdout, "Adding lircd host at %s\n", host->Attribute("addr"));
+					syslog(LOG_NOTICE, "Adding lircd host at %s\n", host->Attribute("addr"));
 					i++;
 				}
 			}
@@ -1586,7 +1586,7 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 				for (host = child->FirstChildElement("device"); host; host=host->NextSiblingElement("device")) {
 					if (i>=MAXDEVS || host==NULL) break;
 					webdevs[i]=strdup(host->Attribute("addr"));
-					fprintf(stdout, "Adding webdev host at %s\n", host->Attribute("addr"));
+					syslog(LOG_NOTICE, "Adding webdev host at %s\n", host->Attribute("addr"));
 					i++;
 				}
 			}
