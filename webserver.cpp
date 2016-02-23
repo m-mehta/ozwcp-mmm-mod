@@ -142,14 +142,17 @@ void Webserver::lirc_send(long server, char *directive, char *remote, char *code
         if (fd < 0) {
                 fprintf(stderr, "%s: could not open socket: %s\n",
                         prog, strerror(-fd));
+				return;
         }
         
 		if (address) free(address);
 		address = NULL;
 		
 		r = lirc_command_init(&ctx, "%s %s %s\n", directive, remote, code);
-		if (r != 0)
+		if (r != 0) {
 				fprintf(stderr, "%s: input too long\n", prog);
+				return;
+		}
 		lirc_command_reply_to_stdout(&ctx);
 		do {
                 r = lirc_command_run(&ctx, fd);
@@ -1220,6 +1223,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
 						strcat(strcpy(tempstr, tempaddr),temppath);
 						curl_free(temppath);
+						fprintf(stdout, "Posting to url: %s\n", tempstr)
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 						res = curl_easy_perform(curl);
@@ -1567,6 +1571,7 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 				for (host = child->FirstChildElement("host"); host; host=host->NextSiblingElement("host")) {
 					if (i>=MAXDEVS || host==NULL) break;
 					lircds[i]=strdup(host->Attribute("addr"));
+					fprintf(stdout, "Adding lircd host at %s\n", host->Attribute("addr"));
 					i++;
 				}
 			}
@@ -1576,7 +1581,8 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 				int i=0;
 				for (host = child->FirstChildElement("device"); host; host=host->NextSiblingElement("device")) {
 					if (i>=MAXDEVS || host==NULL) break;
-					lircds[i]=strdup(host->Attribute("addr"));
+					webdevs[i]=strdup(host->Attribute("addr"));
+					fprintf(stdout, "Adding webdev host at %s\n", host->Attribute("addr"));
 					i++;
 				}
 			}
