@@ -818,7 +818,7 @@ int32 main(int32 argc, char* argv[])
 
     /* On success: The child process becomes session leader */
 	sid = setsid();
-    if (setsid() < 0)
+    if (sid < 0)
         exit(EXIT_FAILURE);
 
     /* Catch, ignore and handle signals */
