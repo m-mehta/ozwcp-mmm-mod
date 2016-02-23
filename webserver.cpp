@@ -130,13 +130,16 @@ void Webserver::lirc_send(long server, char *directive, char *remote, char *code
 				val = strtoul(p + 1, &end, 10);
 				if (!(*(p + 1)) || *end || val < 1 || val > USHRT_MAX) {
 					fprintf(stderr, "%s: invalid port number: %s\n", prog, p + 1);
+					return;
 				}
 				port = (unsigned short)val;
 				*p = 0;
 			}
+			fprintf(stdout,"Connnecting to remote lircd socket %s\n",address)
 			fd = lirc_get_remote_socket(address, port, 0);
         	
 		} else {
+			fprintf(stdout,"Connnecting to local lircd socket %s\n",lircd)
 			fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
 		}
         if (fd < 0) {
@@ -151,7 +154,6 @@ void Webserver::lirc_send(long server, char *directive, char *remote, char *code
 		r = lirc_command_init(&ctx, "%s %s %s\n", directive, remote, code);
 		if (r != 0) {
 				fprintf(stderr, "%s: input too long\n", prog);
-				return;
 		}
 		lirc_command_reply_to_stdout(&ctx);
 		do {
@@ -1218,7 +1220,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				
 				curl = curl_easy_init();
 				if (curl) {
-					char *temppath = curl_easy_escape(curl,(char *)cp->conn_arg2,0);
+					char *temppath = curl_easy_unescape(curl,(char *)cp->conn_arg2,0);
 					if (temppath!=NULL) {
 						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
 						strcat(strcpy(tempstr, tempaddr),temppath);
