@@ -1223,7 +1223,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
 						strcat(strcpy(tempstr, tempaddr),temppath);
 						curl_free(temppath);
-						fprintf(stdout, "Posting to url: %s\n", tempstr)
+						fprintf(stdout, "Posting to url: %s\n", tempstr);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 						res = curl_easy_perform(curl);
