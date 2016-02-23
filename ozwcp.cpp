@@ -834,10 +834,10 @@ int32 main(int32 argc, char* argv[])
         exit(EXIT_FAILURE);
 
     /* Success: Let the parent terminate */
-    if (pid > 0)
-        if(debug) fprintf(stdout, "Exiting parent process.\n")
+    if (pid > 0){
+        if(debug) fprintf(stdout, "Exiting parent process.\n");
 		exit(EXIT_SUCCESS);
-
+	}
     /* Set new file permissions */
     umask(0);
 	
