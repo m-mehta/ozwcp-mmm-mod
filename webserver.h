@@ -81,7 +81,7 @@ class Webserver {
 		static CURLcode res;
 		static char *lircds[];
 		static char *webdevs[];
-		static pthread_mutext_t curl_lock;
+		static pthread_mutex_t curl_lock;
 };
 void server_global_init();
 void server_global_cleanup();

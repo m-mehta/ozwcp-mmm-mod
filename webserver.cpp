@@ -91,7 +91,7 @@ CURL *Webserver::curl = NULL;
 CURLcode Webserver::res = CURLE_OK;
 char *Webserver::lircds[MAXDEVS] = {NULL};
 char *Webserver::webdevs[MAXDEVS] = {NULL};
-pthread_mutext_t curl_lock;
+pthread_mutex_t curl_lock;
 
 extern pthread_mutex_t nlock;
 extern MyNode *nodes[];
