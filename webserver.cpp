@@ -1221,7 +1221,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				curl = curl_easy_init();
 				if (curl) {
 					//char *temppath = curl_easy_unescape(curl,(char *)cp->conn_arg2,0);
-					if (temppath!=NULL) {
+					//if (temppath!=NULL) {
 						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
 						strcat(strcpy(tempstr, tempaddr),(char *)cp->conn_arg2);
 						//curl_free(temppath);
@@ -1229,7 +1229,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
 						res = curl_easy_perform(curl);
-					}
+					//}
 					if (res != CURLE_OK) fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
 					curl_easy_cleanup(curl);
 				}
