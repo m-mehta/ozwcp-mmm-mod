@@ -91,6 +91,7 @@ CURL *Webserver::curl = NULL;
 CURLcode Webserver::res = CURLE_OK;
 char *Webserver::lircds[MAXDEVS] = {NULL};
 char *Webserver::webdevs[MAXDEVS] = {NULL};
+pthread_mutext_t curl_lock;
 
 extern pthread_mutex_t nlock;
 extern MyNode *nodes[];
@@ -1217,12 +1218,12 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 			if (*up_data_size != 0) {
 				MHD_post_process(cp->conn_pp, up_data, *up_data_size);
 				*up_data_size = 0;
-				
+				pthread_mutex_lock(&curl_lock);
 				curl = curl_easy_init();
 				if (curl) {
 					//char *temppath = curl_easy_unescape(curl,(char *)cp->conn_arg2,0);
 					//if (temppath!=NULL) {y
-						strcat(strcpy(tempstr, 						webdevs[strtol((char *)cp->conn_arg1,NULL,10)]),(char *)cp->conn_arg2);
+						strcat(strcpy(tempstr,webdevs[strtol((char *)cp->conn_arg1,NULL,10)]),(char *)cp->conn_arg2);
 						//curl_free(temppath);
 						fprintf(stdout, "Posting to url: %s\n", tempstr);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
@@ -1232,6 +1233,7 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 					if (res != CURLE_OK) fprintf(stderr, "curl failed: %s\n", curl_easy_strerror(res));
 					curl_easy_cleanup(curl);
 				}
+				pthread_mutex_unlock(&curl_lock);
 				return MHD_YES;
 			} else
 				ret = web_send_data(conn, EMPTY, MHD_HTTP_OK, false, false, NULL); // no free, no copy
