@@ -1220,11 +1220,11 @@ int Webserver::Handler (struct MHD_Connection *conn, const char *url,
 				
 				curl = curl_easy_init();
 				if (curl) {
-					char *temppath = curl_easy_unescape(curl,(char *)cp->conn_arg2,0);
+					//char *temppath = curl_easy_unescape(curl,(char *)cp->conn_arg2,0);
 					if (temppath!=NULL) {
 						char *tempaddr = webdevs[strtol((char *)cp->conn_arg1,NULL,10)];
-						strcat(strcpy(tempstr, tempaddr),temppath);
-						curl_free(temppath);
+						strcat(strcpy(tempstr, tempaddr),(char *)cp->conn_arg2);
+						//curl_free(temppath);
 						fprintf(stdout, "Posting to url: %s\n", tempstr);
 						curl_easy_setopt(curl, CURLOPT_URL, tempstr);
 						curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "");
