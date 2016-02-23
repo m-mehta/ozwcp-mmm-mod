@@ -43,6 +43,9 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/signal.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <syslog.h>
 #include <netinet/in.h>
 #include <microhttpd.h>
