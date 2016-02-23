@@ -34,6 +34,7 @@
 // documentation will at all times remain with copyright holders.
 //-----------------------------------------------------------------------------
 #include <curl/curl.h>
+#include <pthread.h>
 
 typedef enum { COL_NODE, COL_TYPE, COL_NAME, COL_LOCATION } coltype_t;
 typedef enum { CON_UNK, CON_GET, CON_POST } conntype_t;
