@@ -135,11 +135,11 @@ void Webserver::lirc_send(long server, char *directive, char *remote, char *code
 				port = (unsigned short)val;
 				*p = 0;
 			}
-			fprintf(stdout,"Connnecting to remote lircd socket %s\n",address)
+			fprintf(stdout,"Connnecting to remote lircd socket %s\n",address);
 			fd = lirc_get_remote_socket(address, port, 0);
         	
 		} else {
-			fprintf(stdout,"Connnecting to local lircd socket %s\n",lircd)
+			fprintf(stdout,"Connnecting to local lircd socket %s\n",lircd);
 			fd = lirc_get_local_socket(lircd ? lircd : NULL, 0);
 		}
         if (fd < 0) {
