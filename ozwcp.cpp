@@ -835,21 +835,24 @@ int32 main(int32 argc, char* argv[])
 
     /* Success: Let the parent terminate */
     if (pid > 0)
-        exit(EXIT_SUCCESS);
+        if(debug) fprintf(stdout, "Exiting parent process.\n")
+		exit(EXIT_SUCCESS);
 
     /* Set new file permissions */
     umask(0);
-
-    /* Change the working directory to the appropriate directory */
-    chdir("/var/ozwcp");
+	
+	/* Open the log file */
+    openlog ("ozwd", LOG_PID, LOG_USER);
+    
+	/* Change the working directory to the appropriate directory */
+    chdir("/var/ozwcp/");
 
     /* Close all std file descriptors */
     close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
 
-    /* Open the log file */
-    openlog ("ozwd", LOG_PID, LOG_USER);
+    
 	
 	server_global_init(); //required to make this call to setup curl before threading 
 	if (pthread_mutex_init(&curl_lock,NULL) != 0)
