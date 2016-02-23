@@ -16,27 +16,27 @@
 	  }
 	  function rokuLeftBtnDown() {
 	    var xhttp = new XMLHttpRequest();
-		xhttp.open("POST", "rokuPost.html", true)
+		xhttp.open("POST", "WebDevPost.html", true)
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send("Left=down");
+		xhttp.send("host=0&path=keydown%2Fleft");
+	  }
+	  function rokuLeftBtnUp() {
+	    var xhttp = new XMLHttpRequest();
+		xhttp.open("POST", "WebDevPost.html", true)
+		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+		xhttp.send("host=0&path=keyup%2Fleft");
 	  }
 	  function rokuUpBtnDown() {
 	    var xhttp = new XMLHttpRequest();
 		xhttp.open("POST", "rokuPost.html", true)
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send("Up=down");
-	  }
-	  function rokuLeftBtnUp() {
-	    var xhttp = new XMLHttpRequest();
-		xhttp.open("POST", "rokuPost.html", true)
-		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send("Left=up");
+		xhttp.send("");
 	  }
 	  function rokuUpBtnUp() {
 	    var xhttp = new XMLHttpRequest();
-		xhttp.open("POST", "rokuPost.html", true)
+		xhttp.open("POST", "IRPost.html", true)
 		xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-		xhttp.send("Up=up");
+		xhttp.send("host=0&directive=SEND_ONCE&remote=TEST&code=KEY_PLAY");
 	  }
 	  function irSendMute() {
 		var xhttp = new XMLHttpRequest();
