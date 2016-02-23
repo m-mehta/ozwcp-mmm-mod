@@ -881,6 +881,8 @@ int Webserver::SendPollResponse (struct MHD_Connection *conn)
 void server_global_init()
 {
   curl_global_init(CURL_GLOBAL_ALL);
+  if (pthread_mutex_init(&curl_lock,NULL) != 0)
+	fprintf(stderr, "Failed to initialize curl mutex lock.\n");
 }
 
 /*
@@ -889,6 +891,7 @@ void server_global_init()
  */
 void server_global_cleanup()
 {
+  pthread_mutex_destroy(&curl_lock);
   curl_global_cleanup();
 }
 
