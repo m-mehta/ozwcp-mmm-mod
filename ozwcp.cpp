@@ -875,6 +875,7 @@ int32 main(int32 argc, char* argv[])
 	while (!done) {	// now wait until we are done
 		sleep(1);
 	}
+	syslog(LOG_NOTICE, "Shutting down server...\n");
 	pthread_mutex_destroy(&curl_lock);
 	delete wserver;
 	free(devpath);
@@ -882,6 +883,7 @@ int32 main(int32 argc, char* argv[])
 	Manager::Destroy();
 	Options::Destroy();
 	server_global_cleanup(); //make this cleanup call last before exiting
+	syslog(LOG_NOTICE, "Shutdown complete.\n");
 	closelog();
 	exit(0);
 }
