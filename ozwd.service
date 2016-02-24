@@ -1,0 +1,13 @@
+[Unit]
+Description=Daemon for OZW web server
+Wants=lircd_helper@lirc0.service network.target
+Requires=network.target
+
+[Service]
+Type=forking
+Environment="LIRC_SOCKET_PATH=/var/run/lirc/lircd-lircd0"
+ExecStart=/usr/sbin/ozwd -b -p 8080
+ExecStop=pkill ozwd
+
+[Install]
+WantedBy=multi-user.target
