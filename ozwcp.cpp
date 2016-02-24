@@ -60,6 +60,7 @@
 #include "ozwcp.h"
 #include "webserver.h"
 
+#define RUNDIR "/var/ozwd/"
 #define CONFIGPATH "./config/"
 
 using namespace OpenZWave;
@@ -781,11 +782,17 @@ int32 main(int32 argc, char* argv[])
 	long webport;
 	char *ptr;
     char *devpath = NULL;
-	while ((i = getopt(argc, argv, "vp:d:")) != EOF)
+	int daemon = 1;
+	
+	while ((i = getopt(argc, argv, "vbp:d:")) != EOF)
 		switch (i) {
 			case 'v':
 				debug = 1;
 				break;
+			case 'b':
+				daemon = 1;
+				break;
+			
 			case 'p':
 				webport = strtol(optarg, &ptr, 10);
 				if (ptr == optarg)
@@ -794,65 +801,68 @@ int32 main(int32 argc, char* argv[])
 			case 'd':
 			    devpath = strdup(optarg);
 				if (!devpath) fprintf (stderr, "Out of memory, unable to use provided path to device.\n");
+				break;
 			default:
 				bad:
-				fprintf(stderr, "usage: ozwcp [-v] -p <port> [-d </path/to/dev>]\n");
+				fprintf(stderr, "usage: ozwcp [-v] [-b] -p <port> [-d </path/to/dev>]\nv = verbose\nb = run in background as daemon\n");
 			exit(1);
 		}
 	for (i = 0; i < MAX_NODES; i++)
 		nodes[i] = NULL;
 		
 	// Begin Daemonize	
-	pid_t pid, sid;
+	if (daemon) {
+		pid_t pid, sid;
 
-    /* Fork off the parent process */
-    pid = fork();
+		/* Fork off the parent process */
+		pid = fork();
 
-    /* An error occurred */
-    if (pid < 0)
-        exit(EXIT_FAILURE);
+		/* An error occurred */
+		if (pid < 0)
+			exit(EXIT_FAILURE);
 
-    /* Success: Let the parent terminate */
-    if (pid > 0)
-        exit(EXIT_SUCCESS);
+		/* Success: Let the parent terminate */
+		if (pid > 0)
+			exit(EXIT_SUCCESS);
 
-    /* On success: The child process becomes session leader */
-	sid = setsid();
-    if (sid < 0)
-        exit(EXIT_FAILURE);
+		/* On success: The child process becomes session leader */
+		sid = setsid();
+		if (sid < 0)
+			exit(EXIT_FAILURE);
 
-    /* Catch, ignore and handle signals */
-    //TODO: Implement a working signal handler */
-    signal(SIGCHLD, SIG_IGN);
-    signal(SIGHUP, SIG_IGN);
+		/* Catch, ignore and handle signals */
+		//TODO: Implement a working signal handler */
+		signal(SIGCHLD, SIG_IGN);
+		signal(SIGHUP, SIG_IGN);
 
-    /* Fork off for the second time*/
-    pid = fork();
+		/* Fork off for the second time*/
+		pid = fork();
 
-    /* An error occurred */
-    if (pid < 0)
-        exit(EXIT_FAILURE);
+		/* An error occurred */
+		if (pid < 0)
+			exit(EXIT_FAILURE);
 
-    /* Success: Let the parent terminate */
-    if (pid > 0){
-        if(debug) fprintf(stdout, "Exiting parent process.\n");
-		exit(EXIT_SUCCESS);
+		/* Success: Let the parent terminate */
+		if (pid > 0){
+			if(debug) fprintf(stdout, "Exiting parent process.\n");
+			exit(EXIT_SUCCESS);
+		}
+		/* Set new file permissions */
+		umask(0);
 	}
-    /* Set new file permissions */
-    umask(0);
-	
 	/* Open the log file */
     openlog ("ozwd", LOG_PID, LOG_USER);
     
 	/* Change the working directory to the appropriate directory */
-    syslog(LOG_NOTICE, "Changin dir to /var/ozwd");
-	chdir("/var/ozwd/");
+    if (daemon){
+		syslog(LOG_NOTICE, "Changin dir to /var/ozwd");
+		chdir(RUNDIR);
 
-    /* Close all std file descriptors */
-    close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
-
+		/* Close all std file descriptors */
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
+	}
     
 	syslog(LOG_NOTICE, "Setting up server...\n");
 	server_global_init(); //required to make this call to setup curl before threading 
