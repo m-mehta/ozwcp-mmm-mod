@@ -812,23 +812,23 @@ int32 main(int32 argc, char* argv[])
 		
 	// Begin Daemonize	
 	if (daemon) {
-		//pid_t pid, sid;
+		pid_t pid, sid;
 
 		/* Fork off the parent process */
-		//pid = fork();
+		pid = fork();
 
 		/* An error occurred */
-		//if (pid < 0)
-			//exit(EXIT_FAILURE);
+		if (pid < 0)
+			exit(EXIT_FAILURE);
 
 		/* Success: Let the parent terminate */
-		//if (pid > 0)
-			//exit(EXIT_SUCCESS);
+		if (pid > 0)
+			exit(EXIT_SUCCESS);
 
 		/* On success: The child process becomes session leader */
-		//sid = setsid();
-		//if (sid < 0)
-			//exit(EXIT_FAILURE);
+		sid = setsid();
+		if (sid < 0)
+			exit(EXIT_FAILURE);
 
 		/* Catch, ignore and handle signals */
 		//TODO: Implement a working signal handler */
