@@ -24,6 +24,9 @@ LDFLAGS	:= $(DEBUG_LDFLAGS)
 OPENZWAVE := ../open-zwave
 LIRCPATH := ../lirc-0.9.2/lib/
 
+CONFIGPATH := $(OPENZWAVE)/config
+
+
 INCLUDES := -I $(OPENZWAVE)/cpp/src -I $(OPENZWAVE)/cpp/src/command_classes/ \
 	-I $(OPENZWAVE)/cpp/src/value_classes/ -I $(OPENZWAVE)/cpp/src/platform/ \
 	-I $(OPENZWAVE)/cpp/src/platform/unix -I $(OPENZWAVE)/cpp/tinyxml/ \
@@ -74,6 +77,7 @@ webserver.o: webserver.h ozwcp.h $(OPENZWAVE)/cpp/src/Options.h $(OPENZWAVE)/cpp
 
 ozwcp:	ozwcp.o webserver.o zwavelib.o $(LIBZWAVE)
 	$(LD) -o $@ $(LDFLAGS) ozwcp.o webserver.o zwavelib.o $(LIBS)
+	test -d "./config" || ln -s $(CONFIGPATH)
 
 dist:	ozwcp
 	rm -f ozwcp.tar.gz
