@@ -1560,8 +1560,10 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 			syslog(LOG_ERR, "Out of memory open devname\n");
 			exit(1);
 		}
+		syslog(LOG_NOTICE, "Allocated memory for device name\n");
 		usb = false;
 		strcpy(devname, devarg ? devarg : DEVICE);
+		syslog (LOG_NOTICE, "About to add default device driver...\n");
 		Manager::Get()->AddDriver(devname);
 	}
 	syslog(LOG_NOTICE, "added ozw default device driver.\n");
