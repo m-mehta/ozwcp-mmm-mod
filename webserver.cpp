@@ -1552,6 +1552,8 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 	if (wdata != NULL) {
 		ready = true;
 	}
+	syslog(LOG_NOTICE, "webserver started.\n");
+	if (ready) syslog(LOG_NOTICE, "webserver ready.\n");
 	if (devname == NULL) {
 		devname = (char *)malloc(strlen(devarg ? devarg : DEVICE) + 1);
 		if (devname == NULL) {
@@ -1562,6 +1564,8 @@ Webserver::Webserver (int const wport, char *devarg) : sortcol(COL_NODE), logbyt
 		strcpy(devname, devarg ? devarg : DEVICE);
 		Manager::Get()->AddDriver(devname);
 	}
+	syslog(LOG_NOTICE, "added ozw default device driver.\n");
+	
 	TiXmlDocument config("./config.xml");
 	config.LoadFile();
 	TiXmlElement* child;
