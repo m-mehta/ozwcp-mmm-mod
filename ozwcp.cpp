@@ -845,7 +845,8 @@ int32 main(int32 argc, char* argv[])
     openlog ("ozwd", LOG_PID, LOG_USER);
     
 	/* Change the working directory to the appropriate directory */
-    chdir("/var/ozwcp/");
+    syslog(LOG_NOTICE, "Changin dir to /var/ozwd");
+	chdir("/var/ozwd/");
 
     /* Close all std file descriptors */
     close(STDIN_FILENO);
@@ -853,7 +854,7 @@ int32 main(int32 argc, char* argv[])
 	close(STDERR_FILENO);
 
     
-	
+	syslog(LOG_NOTICE, "Setting up server...\n");
 	server_global_init(); //required to make this call to setup curl before threading 
 	if (pthread_mutex_init(&curl_lock,NULL) != 0)
 		syslog(LOG_ERR, "Failed to initialize curl mutex lock.\n");
@@ -869,7 +870,8 @@ int32 main(int32 argc, char* argv[])
 		sleep(2);
 		wserver = new Webserver(webport,devpath);
 	}
-
+    
+	syslog(LOG_NOTICE, "Done setting up server...\n");
 	while (!done) {	// now wait until we are done
 		sleep(1);
 	}
@@ -880,5 +882,6 @@ int32 main(int32 argc, char* argv[])
 	Manager::Destroy();
 	Options::Destroy();
 	server_global_cleanup(); //make this cleanup call last before exiting
+	closelog();
 	exit(0);
 }
