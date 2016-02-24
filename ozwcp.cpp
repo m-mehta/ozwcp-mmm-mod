@@ -782,9 +782,10 @@ int32 main(int32 argc, char* argv[])
 	long webport;
 	char *ptr;
     char *devpath = NULL;
+	char *pidfile = NULL;
 	int daemon = 0;
 	
-	while ((i = getopt(argc, argv, "vbp:d:")) != EOF)
+	while ((i = getopt(argc, argv, "vbp:f:d:")) != EOF)
 		switch (i) {
 			case 'v':
 				debug = 1;
@@ -792,7 +793,10 @@ int32 main(int32 argc, char* argv[])
 			case 'b':
 				daemon = 1;
 				break;
-			
+			case 'f':
+			    pidfile = strdup(optarg);
+				if (!devpath) fprintf (stderr, "Out of memory, unable use pidfile.\n");
+				break;
 			case 'p':
 				webport = strtol(optarg, &ptr, 10);
 				if (ptr == optarg)
@@ -804,7 +808,7 @@ int32 main(int32 argc, char* argv[])
 				break;
 			default:
 				bad:
-				fprintf(stderr, "usage: ozwcp [-v] [-b] -p <port> [-d </path/to/dev>]\nv = verbose\nb = run in background as daemon\n");
+				fprintf(stderr, "usage: ozwcp [-v] [-b] -p <port> [-f pidfile] [-d </path/to/dev>]\nv = verbose\nb = run in background as daemon\n");
 			exit(1);
 		}
 	for (i = 0; i < MAX_NODES; i++)
@@ -846,6 +850,12 @@ int32 main(int32 argc, char* argv[])
 		if (pid > 0){
 			if(debug) fprintf(stdout, "Exiting parent process.\n");
 			exit(EXIT_SUCCESS);
+		}
+		/* Create pidfile */
+		if(pidfile) {
+			FILE *fp = fopoen(pidfile,"w+");
+			fprintf(fp,"%d\n",pid);
+			fclose(fp)
 		}
 		/* Set new file permissions */
 		umask(0);
