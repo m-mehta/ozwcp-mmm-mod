@@ -836,19 +836,19 @@ int32 main(int32 argc, char* argv[])
 		//signal(SIGHUP, SIG_IGN);
 
 		/* Fork off for the second time*/
-		//pid = fork();
+		pid = fork();
 
 		/* An error occurred */
-		//if (pid < 0)
-			//exit(EXIT_FAILURE);
+		if (pid < 0)
+			exit(EXIT_FAILURE);
 
 		/* Success: Let the parent terminate */
-		//if (pid > 0){
-			//if(debug) fprintf(stdout, "Exiting parent process.\n");
-			//exit(EXIT_SUCCESS);
-		//}
+		if (pid > 0){
+			if(debug) fprintf(stdout, "Exiting parent process.\n");
+			exit(EXIT_SUCCESS);
+		}
 		/* Set new file permissions */
-		//umask(0);
+		umask(0);
 	}
 	/* Open the log file */
     openlog ("ozwd", LOG_PID, LOG_USER);
@@ -856,7 +856,7 @@ int32 main(int32 argc, char* argv[])
 	/* Change the working directory to the appropriate directory */
     if (daemon){
 		syslog(LOG_NOTICE, "Changin dir to /var/ozwd");
-		//chdir(RUNDIR);
+		chdir(RUNDIR);
 
 		/* Close all std file descriptors */
 		//close(STDIN_FILENO);
