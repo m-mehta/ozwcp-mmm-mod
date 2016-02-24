@@ -853,7 +853,7 @@ int32 main(int32 argc, char* argv[])
 		}
 		/* Create pidfile */
 		if(pidfile) {
-			FILE *fp = fopoen(pidfile,"w+");
+			FILE *fp = fopen(pidfile,"w+");
 			fprintf(fp,"%d\n",pid);
 			fclose(fp);
 		}
