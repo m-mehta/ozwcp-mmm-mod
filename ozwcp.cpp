@@ -782,10 +782,10 @@ int32 main(int32 argc, char* argv[])
 	long webport;
 	char *ptr;
     char *devpath = NULL;
-	char *pidfile = NULL;
+	//char *pidfile = NULL;
 	int daemon = 0;
 	
-	while ((i = getopt(argc, argv, "vbp:f:d:")) != EOF)
+	while ((i = getopt(argc, argv, "vbp:d:")) != EOF)
 		switch (i) {
 			case 'v':
 				debug = 1;
@@ -793,11 +793,11 @@ int32 main(int32 argc, char* argv[])
 			case 'b':
 				daemon = 1;
 				break;
-			case 'f':
+			/*case 'f':
 			    pidfile = strdup(optarg);
-				if (!devpath) fprintf (stderr, "Out of memory, unable use pidfile.\n");
+				if (!pidfile) fprintf (stderr, "Out of memory, unable use pidfile.\n");
 				break;
-			case 'p':
+			*/case 'p':
 				webport = strtol(optarg, &ptr, 10);
 				if (ptr == optarg)
 					goto bad;
@@ -852,11 +852,11 @@ int32 main(int32 argc, char* argv[])
 			exit(EXIT_SUCCESS);
 		}
 		/* Create pidfile */
-		if(pidfile) {
+		/*if(pidfile) {
 			FILE *fp = fopen(pidfile,"w+");
 			fprintf(fp,"%d\n",pid);
 			fclose(fp);
-		}
+		}*/
 		/* Set new file permissions */
 		umask(0);
 	}
