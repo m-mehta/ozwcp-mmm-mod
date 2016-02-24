@@ -855,7 +855,7 @@ int32 main(int32 argc, char* argv[])
 		if(pidfile) {
 			FILE *fp = fopoen(pidfile,"w+");
 			fprintf(fp,"%d\n",pid);
-			fclose(fp)
+			fclose(fp);
 		}
 		/* Set new file permissions */
 		umask(0);
