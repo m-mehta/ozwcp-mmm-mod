@@ -5,7 +5,7 @@ Requires=network.target
 
 [Service]
 Type=forking
-Environment="LIRC_SOCKET_PATH=/var/run/lirc/lircd-lircd0"
+Environment="LIRC_SOCKET_PATH=/var/run/lirc/lircd-lirc0"
 ExecStart=/usr/sbin/ozwd -b -p 8080
 ExecStop=pkill ozwd
 
