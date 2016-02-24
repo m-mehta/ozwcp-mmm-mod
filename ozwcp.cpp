@@ -782,7 +782,7 @@ int32 main(int32 argc, char* argv[])
 	long webport;
 	char *ptr;
     char *devpath = NULL;
-	int daemon = 1;
+	int daemon = 0;
 	
 	while ((i = getopt(argc, argv, "vbp:d:")) != EOF)
 		switch (i) {
