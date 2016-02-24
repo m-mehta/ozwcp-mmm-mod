@@ -832,8 +832,8 @@ int32 main(int32 argc, char* argv[])
 
 		/* Catch, ignore and handle signals */
 		//TODO: Implement a working signal handler */
-		signal(SIGCHLD, SIG_IGN);
-		signal(SIGHUP, SIG_IGN);
+		//signal(SIGCHLD, SIG_IGN);
+		//signal(SIGHUP, SIG_IGN);
 
 		/* Fork off for the second time*/
 		pid = fork();
@@ -848,7 +848,7 @@ int32 main(int32 argc, char* argv[])
 			exit(EXIT_SUCCESS);
 		}
 		/* Set new file permissions */
-		umask(0);
+		//umask(0);
 	}
 	/* Open the log file */
     openlog ("ozwd", LOG_PID, LOG_USER);
@@ -856,7 +856,7 @@ int32 main(int32 argc, char* argv[])
 	/* Change the working directory to the appropriate directory */
     if (daemon){
 		syslog(LOG_NOTICE, "Changin dir to /var/ozwd");
-		chdir(RUNDIR);
+		//chdir(RUNDIR);
 
 		/* Close all std file descriptors */
 		close(STDIN_FILENO);
