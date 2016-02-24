@@ -77,7 +77,10 @@ ozwcp:	ozwcp.o webserver.o zwavelib.o $(LIBZWAVE)
 
 dist:	ozwcp
 	rm -f ozwcp.tar.gz
-	tar -c --exclude=".svn" -hvzf ozwcp.tar.gz ozwcp config/ index.html cp.html cp.js openzwavetinyicon.png README
+	tar -c --exclude=".svn" -hvzf ozwcp.tar.gz ozwcp config/ index.html cp.html cp.js openzwavetinyicon.png README install.sh
+
+install:
+	sudo ./install.sh
 
 clean:
 	rm -f ozwcp *.o
