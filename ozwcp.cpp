@@ -832,8 +832,8 @@ int32 main(int32 argc, char* argv[])
 
 		/* Catch, ignore and handle signals */
 		//TODO: Implement a working signal handler */
-		//signal(SIGCHLD, SIG_IGN);
-		//signal(SIGHUP, SIG_IGN);
+		signal(SIGCHLD, SIG_IGN);
+		signal(SIGHUP, SIG_IGN);
 
 		/* Fork off for the second time*/
 		pid = fork();
@@ -859,9 +859,9 @@ int32 main(int32 argc, char* argv[])
 		chdir(RUNDIR);
 
 		/* Close all std file descriptors */
-		//close(STDIN_FILENO);
-		//close(STDOUT_FILENO);
-		//close(STDERR_FILENO);
+		close(STDIN_FILENO);
+		close(STDOUT_FILENO);
+		close(STDERR_FILENO);
 	}
     
 	syslog(LOG_NOTICE, "Setting up server...\n");
